@@ -1,0 +1,278 @@
+---
+title: "Initial Model Fit"
+format: html
+---
+
+```{r setup}
+options(paged.print=FALSE)
+```
+
+In this notebook we fit a simple machine learning model to predict prepayments for student loans.  Towards this end we use the **tidymodels** framework.  Once our model is fit we deploy it to Posit Connect using the **vetiver** package.
+
+## Loading Packages
+
+Let's begin by loading the packages that we will need.
+```{r}
+#| message: false
+library(tidyverse)
+library(tidymodels)
+library(vetiver)
+library(pins)
+library(plumber)
+```
+
+
+## Reading In the Training Data
+
+Next, let's read in the training data we will use to fit our initial model.  We are going to use the data from December 2022.  Notice that the only real data wrangling we are doing is changing the `paid_label` column to a `factor`, which is required in the **tidymodels** framework.
+```{r}
+#| message: false
+df_train <- read_csv("./data/student-loan-2022-12-01.csv")
+df_train <- df_train %>% mutate(paid_label = factor(paid_label, levels = c("1", "0")))
+df_train
+```
+
+
+## Create Model Specification
+
+The first step in creating a machine learning model with **tidymodels** is creating a model specification.  Here we are creating a decision tree model that uses the **rpart** engine.  This is a classification problem so we set the `mode` of the specification accordingly.
+```{r}
+tree_spec <- 
+  decision_tree() %>%
+  set_engine("rpart") %>% 
+  set_mode("classification")
+tree_spec
+```
+
+## Creating Recipe
+
+We next create a recipe to handle the preprocessing of the features.  To be technically correct, we should change `cosign` and `repay_status` to factors and then create dummy variables for them; but for illustration purposes we will leave these as doubles.  The only preprocessing we are going to do is to set the `role` of the `trade_date` column to "ID" so that we know to not use it as a feature in our model.
+```{r}
+tree_rec <-
+  recipe(paid_label ~ ., data = df_train) %>%
+  update_role(trade_date, new_role = "ID") 
+tree_rec
+```
+
+Let's take a look at the summary of our recipe to see that the roles of all the columns of our training data make sense.
+```{r}
+summary(tree_rec)
+```
+
+
+## Create Workflow
+
+Next, we combine our model specification and our preprocessing `recipe` into a `workflow`.
+```{r}
+tree_wflow <- 
+  workflow() %>% 
+  add_model(tree_spec) %>% 
+  add_recipe(tree_rec)
+tree_wflow
+```
+
+## Fit the Model
+
+Now that we have a `workflow`, we can proceed to fitting. Notice that `tree_fit` is the fitted model that we will deploy to Connect.
+```{r}
+tree_fit <-
+  tree_wflow %>%
+  fit(data = df_train)
+tree_fit
+```
+
+## Vetiver
+
+At this point we will start using the **vetiver** package to deploy our fitted model.  This will entail two steps:
+
+1. Pinning our fitted model to Connect.
+2. Wrapping a **plumber** REST API around our pinned model.
+
+
+### Create a **vetiver** Model
+
+To pin our model, we first create a **vetiver** model object using the `vetiver_model()` function.  I am also adding the `trade_date` of the training data as metadata to our `vetiver_model` object.
+```{r}
+train_metadata <- list(train_data = as.character(df_train$trade_date[1]))
+v <- vetiver_model(
+  tree_fit, 
+  model_name = "pritam.dalal/student_loan",
+  metadata = train_metadata
+)
+v
+```
+
+
+### Pin (Store and Version) Your Model
+
+Next, we create a board, which is simply a connection to our Connect server. And then we pin the model with the `vetiver_pin_write()` function.
+```{r}
+model_board <- board_connect(auth = "envvar")
+model_board %>% vetiver_pin_write(v)
+```
+
+Now, we can check all the versions of our model that are pinned using the `pin_versions()` function in the **pins** package.  At this point we only have a single version of our model. We can also look at Connect and see our new pinned model object.
+```{r}
+model_board %>% pin_versions("pritam.dalal/student_loan")
+```
+
+### Create a REST API
+
+Finally, we wrap a **plumber** REST API around our pinned model.  It's amazing that all this takes is a single call to the `vetiver_deploy_connect()` function.  We can inspect Connect to see our newly deployed API.
+```{r}
+# Deploy to Connect
+vetiver_deploy_rsconnect(
+  board = model_board,
+  name = "pritam.dalal/student_loan",
+  launch.browser = FALSE,
+  appTitle = "Student Loan - Model - API",
+  predict_args = list(debug = FALSE),
+  account = "pritam.dalal",
+  server =  "colorado"
+)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

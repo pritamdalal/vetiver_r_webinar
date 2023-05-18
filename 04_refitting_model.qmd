@@ -1,0 +1,100 @@
+---
+title: "Refitting the Model"
+format: html
+---
+
+```{r setup}
+options(paged.print=FALSE)
+```
+
+In this notebook we will refit our model and pin each iteration to Posit Connect.  This is a contrived example to demonstrate pinning new versions of a model to Connect.  In a real life setting, the refits will likely occur on some sort of regular cadence, perhaps each day or month when new training data becomes available.  This sort of cadenced refitting can be easily scheduled in Connect.
+
+## Load Packages
+
+Let's begin by loading the packages that we will need.
+```{r}
+#| message: false
+library(tidyverse)
+library(tidymodels)
+library(vetiver)
+library(pins)
+library(plumber)
+```
+
+## Organize Dates for Refitting
+
+Next, let's organize the dates for which we will be refitting.
+```{r}
+dates <- c(as.Date("2023-01-01"),
+           as.Date("2023-02-01"),
+           as.Date("2023-03-01"),
+           as.Date("2023-04-01"),
+           as.Date("2023-05-01"),
+           as.Date("2023-06-01")
+           )
+dates
+```
+
+## Refitting for All Dates
+
+This `for`-loop will iterate through our dates and refit our model for each date using training data from that date.
+```{r}
+#| message: false
+for (ix in 1:length(dates)) {
+  
+  # grabbing date and constructing file name of training data
+  trade_date <- ymd(dates[ix])
+  file_name <- paste0("./data/student-loan-", trade_date, ".csv")
+  
+  # reading-in training data
+  df_train <- read_csv(file_name)
+  df_train <- df_train %>% mutate(paid_label = factor(paid_label, levels = c("1", "0")))
+
+  # defining model specification
+  tree_spec <-
+    decision_tree() %>%
+    set_engine("rpart") %>%
+    set_mode("classification")
+
+  # defining preprocessing recipe
+  tree_rec <-
+    recipe(paid_label ~ ., data = df_train) %>%
+    update_role(trade_date, new_role = "ID")
+
+  # constructing workflow from model specification and recipe
+  tree_wflow <-
+    workflow() %>%
+    add_model(tree_spec) %>%
+    add_recipe(tree_rec)
+  tree_wflow
+
+  # fitting the workflow
+  tree_fit <-
+    tree_wflow %>%
+    fit(data = df_train)
+
+  # defining vetiver model object
+  train_metadata <- list(train_data = as.character(df_train$trade_date[1]))
+  v <- vetiver_model(
+    tree_fit,
+    model_name = "pritam.dalal/student_loan",
+    metadata = train_metadata
+  )
+  v
+
+  # creating board and pinning model to connect
+  model_board <- board_connect(auth = "envvar")
+  model_board %>% vetiver_pin_write(v)
+  
+  print(trade_date)
+}
+
+```
+
+## Checking All Versions of the Model
+
+Now we can check all the versions of our model that are pinned using the `pin_versions()` function in the **pins** package.  We can also look at Connect and see the new versions of our model - notice the metadata showing the date of the training data used for each version of the model.
+```{r}
+model_board %>% pin_versions("pritam.dalal/student_loan")
+```
+

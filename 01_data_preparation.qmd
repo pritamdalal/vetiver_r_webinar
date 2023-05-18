@@ -1,0 +1,264 @@
+---
+title: "Data Preparation"
+format: html
+---
+
+
+The purpose of this notebook is to do initial data prep for this demo; it is not part of the demo and you don't need to go through it during the demo.
+
+
+```{r setup}
+options(paged.print=FALSE)
+```
+
+## Loading Packages
+
+Let's begin by loading the packages that we are going to need.
+```{r}
+#| message: false
+library(tidyverse)
+```
+
+## Loading Data
+
+Next, we will load our original data set.
+```{r}
+#| message: false
+df_student_loan <- read_csv("./data/student_loan_original.csv")
+df_student_loan
+```
+
+## Remvoing Loan-Id and Deal Names
+
+Next we will remove a couple of variables that aren't predictors.  We could also ignore these as part of our recipe but, but let's just do it now to keep the subsequent code as simple as possible.
+```{r}
+df_student_loan <- df_student_loan %>% select(-c(load_id, deal_name))
+df_student_loan
+```
+
+## Organizing Dates
+
+We are going to create subsets of our data below, and we are going to associate a date with each of the subsets.  So let's organize the dates now.
+```{r}
+dates <- c(as.Date("2022-12-01"),
+           as.Date("2023-01-01"),
+           as.Date("2023-02-01"),
+           as.Date("2023-03-01"),
+           as.Date("2023-04-01"),
+           as.Date("2023-05-01"),
+           as.Date("2023-06-01")
+           )
+dates
+```
+
+
+## Creating Sampled Data Frames and Writing to Disk
+
+In this step we create the subsets of our data, and write them to disk.  Each subset of data is associated with a date, representing the training data changing through time.
+```{r}
+for (ix in 1:length(dates)){
+  dt <- dates[ix]
+  
+  # creating a new data frame that is a sample of original data frame
+  df <- slice_sample(df_student_loan, n = 100000, replace = FALSE)
+  
+  # adding trade date column to sampled data frame
+  df <- df %>% mutate(trade_date = dt, .before = loan_age)
+  
+  # creating file name
+  file_name <- paste0("./data/student-loan-", ymd(dt), ".csv")
+  
+  write_csv(df, file_name)
+  print(file_name)
+}
+```
+
+
+## Creating "New" Data
+
+Finally, we are going to create a small data set, that is going to represent "new" data that we will feed into 
+```{r}
+# creating small subset of data
+df <- slice_sample(df_student_loan, n = 1000, replace = FALSE)
+
+# removing the paid label, since we wouldn't have this for new data
+df <- df %>% select(-c(load_id, deal_name, paid_label))
+
+# adding trade date column to sampled data frame
+df <- df %>% mutate(trade_date = as.Date("2023-01-01"), .before = loan_age)
+
+# creating file name
+file_name <- "./data/student-loan-new.csv"
+
+write_csv(df, file_name)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

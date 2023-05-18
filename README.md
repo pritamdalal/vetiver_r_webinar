@@ -1,2 +1,2 @@
-# vetiver_webinar
-Materials for a webinar on the vetiver package.
+# Vetiver R Webinar
+Materials for a webinar on the vetiver R package.

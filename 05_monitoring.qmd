@@ -1,0 +1,273 @@
+---
+title: "Monitoring"
+format: html
+---
+
+```{r setup}
+options(paged.print=FALSE)
+```
+
+In this notebook we will demonstrate  the monitoring capabilities of the **vetiver** package.  In particular, we will see how the December 2022 model would have performed on new data over time.  In order to do this we will need to activate the initial model fit in our pinned model object.
+
+## Loading Packages
+
+Let's begin by loading the packages that we will need.
+```{r}
+#| message: false
+library(tidyverse)
+library(tidymodels)
+library(vetiver)
+library(pins)
+library(plumber)
+```
+
+## Organizing Test Data Dates
+
+Next, we organize the dates of our new data.
+```{r}
+dates <- c(as.Date("2023-01-01"),
+           as.Date("2023-02-01"),
+           as.Date("2023-03-01"),
+           as.Date("2023-04-01"),
+           as.Date("2023-05-01"),
+           as.Date("2023-06-01")
+           )
+dates
+```
+
+## Concatenating Test Data into Single Data Frame
+
+We will now read-in our new data and concatenate it into a single `tibble`.
+```{r}
+#| message: false
+df_test <- NULL
+for (ix in 1:length(dates)){
+    # grabbing date and constructing file name of training data
+  trade_date <- ymd(dates[ix])
+  file_name <- paste0("./data/student-loan-", trade_date, ".csv")
+  
+  # reading-in training data
+  df_train <- read_csv(file_name)
+  df_train <- df_train %>% mutate(paid_label = factor(paid_label, levels = c("1", "0")))
+  
+  df_test <- df_test %>% bind_rows(df_train)
+}
+df_test
+```
+
+## Grabbing Model Object from Pin
+
+Next, we grab our fitted model from Connect by creating a model board and then calling the `vetiver_pin_read()` function.
+```{r}
+model_board <- board_connect(auth = "envvar")
+v <- vetiver_pin_read(model_board, "pritam.dalal/student_loan")
+```
+
+
+## Computing Metrics
+
+The first step towards monitoring is calculating metrics and pinning the metrics to a new `pin` object in Connect.  We begin by calculating the metrics which can be done easily using the `vetiver_compute_metrics()` function.  The first line of code in the chunk below articulates the metrics we want to calculate, which for us will be accuracy and f1-measure.  We calculate these on a monthly basis - note that the new data has to have a sense of time in order for `vetiver_compute_metrics()` to work properly.
+```{r}
+multi_metric <- metric_set(accuracy, f_meas)
+
+metrics <-
+    augment(v, new_data = df_test) %>%
+    vetiver_compute_metrics(
+      date_var = trade_date, 
+      period = "month",
+      truth = paid_label,
+      estimate = .pred_class,
+      metric_set = multi_metric
+      )
+metrics
+```
+
+## Writing Metrics to Pin
+
+Now that we have metrics calculated, we can pin them to a new pin in Connect.  Once we have done this, we can view our new pin in Connect.
+```{r}
+if (pin_exists(model_board, "pritam.dalal/student_loan_metrics")) {
+  print("Pin already exists, updating existing pin...")
+  vetiver_pin_metrics(model_board, metrics, "pritam.dalal/student_loan_metrics", overwrite = TRUE)
+} else {
+  print("Creating metrics pin for the first time...")
+  pin_write(model_board, metrics, "pritam.dalal/student_loan_metrics")
+}
+```
+
+## Graphing Metrics from Pin
+
+Now that we have our metrics in a pin, we can use the *vetiver* convenience function `vetiver_plot_metrics()` to easily plot our metrics over time. 
+```{r}
+monitoring_metrics <- model_board %>% pin_read("pritam.dalal/student_loan_metrics")
+vetiver_plot_metrics(monitoring_metrics)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
