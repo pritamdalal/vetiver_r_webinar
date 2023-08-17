@@ -7,7 +7,7 @@ format: html
 options(paged.print=FALSE)
 ```
 
-In this notebook we will demonstrate  the monitoring capabilities of the **vetiver** package.  In particular, we will see how the December 2022 model would have performed on new data over time.  In order to do this we will need to activate the initial model fit in our pinned model object.
+In this notebook we will demonstrate  the monitoring capabilities of the **vetiver** package.  In particular, we will see how the December 2022 model would have performed on new data over time.  In order to do this we will need to activate the initial model fit in our pinned model object - we will do this manually in the Connect UI.
 
 ## Loading Packages
 
@@ -60,7 +60,7 @@ df_test
 Next, we grab our fitted model from Connect by creating a model board and then calling the `vetiver_pin_read()` function.
 ```{r}
 model_board <- board_connect(auth = "envvar")
-v <- vetiver_pin_read(model_board, "pritam.dalal/student_loan")
+v <- vetiver_pin_read(model_board, "pritam.dalal/student_loan_model")
 ```
 
 
@@ -84,7 +84,7 @@ metrics
 
 ## Writing Metrics to Pin
 
-Now that we have metrics calculated, we can pin them to a new pin in Connect.  Once we have done this, we can view our new pin in Connect.
+Now that we have metrics calculated, we can pin them to a new pin in Connect.  Once we have done this, we can view our new pin in the Connect UI.
 ```{r}
 if (pin_exists(model_board, "pritam.dalal/student_loan_metrics")) {
   print("Pin already exists, updating existing pin...")

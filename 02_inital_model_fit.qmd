@@ -96,7 +96,7 @@ To pin our model, we first create a **vetiver** model object using the `vetiver_
 train_metadata <- list(train_data = as.character(df_train$trade_date[1]))
 v <- vetiver_model(
   tree_fit, 
-  model_name = "pritam.dalal/student_loan",
+  model_name = "pritam.dalal/student_loan_model",
   metadata = train_metadata
 )
 v
@@ -113,7 +113,7 @@ model_board %>% vetiver_pin_write(v)
 
 Now, we can check all the versions of our model that are pinned using the `pin_versions()` function in the **pins** package.  At this point we only have a single version of our model. We can also look at Connect and see our new pinned model object.
 ```{r}
-model_board %>% pin_versions("pritam.dalal/student_loan")
+model_board %>% pin_versions("pritam.dalal/student_loan_model")
 ```
 
 ### Create a REST API
@@ -123,7 +123,7 @@ Finally, we wrap a **plumber** REST API around our pinned model.  It's amazing t
 # Deploy to Connect
 vetiver_deploy_rsconnect(
   board = model_board,
-  name = "pritam.dalal/student_loan",
+  name = "pritam.dalal/student_loan_model",
   launch.browser = FALSE,
   appTitle = "Student Loan - Model - API",
   predict_args = list(debug = FALSE),

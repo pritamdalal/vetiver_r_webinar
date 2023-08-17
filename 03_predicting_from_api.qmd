@@ -11,8 +11,8 @@ In final step of the previous notebook we wrapped a **plumber** API around our f
 
 In order to do this we will need to do two preliminary steps in Connect:
 
-1. Change the access setting of our deployed API.
-2. Change the vanity URL of our deployed API.
+1. Change the access setting of our deployed API to `Anyone - no login required`.
+2. Change the vanity URL of our deployed API to `student-loan-api`.
 
 ## Loading Packages
 
