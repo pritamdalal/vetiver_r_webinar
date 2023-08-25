@@ -60,7 +60,7 @@ df_test
 Next, we grab our fitted model from Connect by creating a model board and then calling the `vetiver_pin_read()` function.
 ```{r}
 model_board <- board_connect(auth = "envvar")
-v <- vetiver_pin_read(model_board, "pritam.dalal/student_loan_model")
+v <- vetiver_pin_read(model_board, "pritam.dalal/student_loan_model_r")
 ```
 
 
@@ -86,12 +86,12 @@ metrics
 
 Now that we have metrics calculated, we can pin them to a new pin in Connect.  Once we have done this, we can view our new pin in the Connect UI.
 ```{r}
-if (pin_exists(model_board, "pritam.dalal/student_loan_metrics")) {
+if (pin_exists(model_board, "pritam.dalal/student_loan_metrics_r")) {
   print("Pin already exists, updating existing pin...")
-  vetiver_pin_metrics(model_board, metrics, "pritam.dalal/student_loan_metrics", overwrite = TRUE)
+  vetiver_pin_metrics(model_board, metrics, "pritam.dalal/student_loan_metrics_r", overwrite = TRUE)
 } else {
   print("Creating metrics pin for the first time...")
-  pin_write(model_board, metrics, "pritam.dalal/student_loan_metrics")
+  pin_write(model_board, metrics, "pritam.dalal/student_loan_metrics_r")
 }
 ```
 
@@ -99,7 +99,7 @@ if (pin_exists(model_board, "pritam.dalal/student_loan_metrics")) {
 
 Now that we have our metrics in a pin, we can use the *vetiver* convenience function `vetiver_plot_metrics()` to easily plot our metrics over time. 
 ```{r}
-monitoring_metrics <- model_board %>% pin_read("pritam.dalal/student_loan_metrics")
+monitoring_metrics <- model_board %>% pin_read("pritam.dalal/student_loan_metrics_r")
 vetiver_plot_metrics(monitoring_metrics)
 ```
 

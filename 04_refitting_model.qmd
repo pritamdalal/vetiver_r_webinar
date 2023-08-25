@@ -77,7 +77,7 @@ for (ix in 1:length(dates)) {
   train_metadata <- list(train_data = as.character(df_train$trade_date[1]))
   v <- vetiver_model(
     tree_fit,
-    model_name = "pritam.dalal/student_loan_model",
+    model_name = "pritam.dalal/student_loan_model_r",
     metadata = train_metadata
   )
   v
@@ -95,6 +95,6 @@ for (ix in 1:length(dates)) {
 
 Now we can check all the versions of our model that are pinned using the `pin_versions()` function in the **pins** package.  We can also look at the Connect UI to see the new versions of our model - notice the metadata showing the date of the training data used for each version of the model.
 ```{r}
-model_board %>% pin_versions("pritam.dalal/student_loan_model")
+model_board %>% pin_versions("pritam.dalal/student_loan_model_r")
 ```
 
